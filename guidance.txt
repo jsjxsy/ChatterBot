@@ -1,0 +1,44 @@
+﻿一、python爬虫
+基于scrapy框架，从十万个为什么网址：http://www.tom61.com/shiwangeweishime爬取数据。
+爬虫文件源码：shiwanwhy.py
+
+scrapy runspider shiwanwhy.py
+在同级目录下生成文件shiwanwhy_2017_12_26 _105226（语料库）
+
+处理脏数据：从网站上爬取的语料库如果直接使用，一般会出现若干报错，报错形式常常是sqlite数据库里写不进去数据，此时需要对这些脏数据进行处理
+比如：
+1.语料库的问答，开头第一个字符时大写的双引号““”，ChatterBot平台读取不了，会报错
+2.语料库问答，末尾如果不是句号，而是冒号或逗号等符号，ChatterBot平台会判断一句话还未结束，也会报错
+脏数据处理方法：
+1.定位问题：由于由脏数据导致的程序报错一般与语料库无关，所以我暂时是用大量测试定位问题的。
+2.ETL:如果数据量小，可以手动处理，数据量大非常的话（大数据），可以用hive或sparksql自定义udf函数进行数据清洗
+
+
+二、基于django的十万个为什么web对话平台
+源码地址：https://github.com/yinzhaoyang/ChatterBot
+
+把语料库放入指定目录：%PYTHON_INSTALL_PATH%\Python35\Lib\dist-packages\chatterbot_corpus\data\chinese
+python text.py ，生成一个db.sqlite3文件
+
+打开ChatterBot-master\examples\django_app\manage.py文件
+查看 os.environ.setdefault后面settings.py文件的路径
+如：os.environ.setdefault("DJANGO_SETTINGS_MODULE", "example_app.settings")
+则settings文件在example_app目录下。
+
+打开ChatterBot-master\examples\django_app\example_app目录下的settings文件进行配置
+对CHATTERBOT这个字典的属性进行配置，配置可参照官网http://chatterbot.readthedocs.io/en/stable/input/index.html#variable-input-type-adapter
+需注意的地方：'training_data'：指定要训练的语料库，把爬虫趴下来的语料库放进相应目录下，文件后缀名得用.yml，不然此语料库机器不会进行学习
+
+对DATABASES这个字典的属性进行配置，需注意的地方：'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),若是程序启动后报错找不到sqlite数据库，数据库打不开（django.db.utils.OperationalError: unable to open database file），
+就把其中的BASE_DIR这个写死为之前训练语料库生成的那个db.sqlite3的地址
+
+pip install yolk3k
+pip install django==1.8
+
+python manage.py migrate
+
+python manage.py train
+
+python manage.py runserver 0.0.0.0:9000
+
+http://localhost:9000/
